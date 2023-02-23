@@ -57,11 +57,19 @@ User DeserializeUser(cJSON *json)
 // Page Stats
 // 0 = Intro Page
 // 1 = Feed
-// 2 = Data Form
+// 2 = Search
+// 3 = Data Form
 //....so far.
 int page_state = 0;
 
-char bg[100] = {"static\\halal-tinder-home1.bmp"};
+char bg[4][100] = {"./static/halal-tinder-home1.png", "./static/halal-tinder-bg-people.png", "./static/halal-tinder-bg-search.png", "./static/halal-tinder-bg-add.png"};
+char btns[4][30] = {"./static/Home.png", "./static/People.png", "./static/Search.png", "./static/Add.png"};
+char texts[1][200] = {"./static/mat-t1.png"};
+
+int btn_posX = 1700;
+int btn_posY = 860;
+int minusY = 0;
+
 void iDraw()
 {
 	// place your drawing codes here
@@ -69,36 +77,49 @@ void iDraw()
 	if (page_state == 0)
 	{
 		// intro page here
-		iShowBMP(0, 0, bg);
-		iText(200, 1000, "Welcome to Halal Tinder!!");
+		iShowBMP(0, 0, bg[0]);
 	}
 	else if (page_state == 1)
 	{
 		// Feed here
-		iText(200, 1000, "Here are some matches for you!!");
+		iShowBMP(0, 0, bg[1]);
+
+		// Read from file
+		FILE *fpr = fopen("data.json", "r");
+		if (fpr)
+		{
+			char buffer[1024];
+			fread(buffer, 1, 1024, fpr);
+			fclose(fpr);
+
+			cJSON *root = cJSON_Parse(buffer);
+			cJSON *userJson = NULL;
+			cJSON_ArrayForEach(userJson, root)
+			{
+				User user = DeserializeUser(userJson);
+				printf("Name: %s, Age: %d, Married: %s\n", user.name, user.age, user.isMarried ? "Yes" : "No");
+				// char age[10] = to_string(user.age);
+				iText(500, 500, user.name, GLUT_BITMAP_TIMES_ROMAN_24);
+				// iText(600, 500, age, GLUT_BITMAP_TIMES_ROMAN_24);
+				// iText(700, 500, isMarried, GLUT_BITMAP_TIMES_ROMAN_24);
+			}
+			cJSON_Delete(root);
+		}
 	}
 	else if (page_state == 2)
 	{
-		// Data form here.
-		iText(200, 1000, "Fill out your form!!");
+		// Search option here.
+		iShowBMP(0, 0, bg[2]);
 	}
-	// iText(500, 500, p1.username);
-	// iText(550, 550, p1.name);a
+	else if (page_state == 3)
+	{
+		// Data form here.
+		iShowBMP(0, 0, bg[3]);
+	}
 }
 
 void iKeyboard(unsigned char key)
 {
-	if(key == '0'){
-		page_state = 0;
-	}
-	else if(key == '1'){
-		page_state = 1;
-	}
-	else if (key == '2')
-	{
-		page_state = 2;
-	}
-
 	if (key == 'q')
 	{
 		exit(0);
@@ -113,6 +134,20 @@ void iMouseMove(int mx, int my)
 
 void iMouse(int button, int state, int mx, int my)
 {
+	if(button == GLUT_LEFT_BUTTON && state == GLUT_DOWN){
+		if (mx > 1660 && mx < 1810 && my > 870 && my < 1010){
+			page_state = 0;
+		}
+		else if (mx > 1660 && mx < 1810 && my > 630 && my < 770){
+			page_state = 1;
+		}
+		else if (mx > 1660 && mx < 1810 && my > 390 && my < 530){
+			page_state = 2;
+		}
+		else if (mx > 1660 && mx < 1810 && my > 155 && my < 250){
+			page_state = 3;
+		}
+	}
 }
 
 void iSpecialKeyboard(unsigned char key)
@@ -149,22 +184,22 @@ int main()
 		fclose(fp);
 	}
 
-	FILE *fpr = fopen("data.json", "r");
-	if (fpr)
-	{
-		char buffer[1024];
-		fread(buffer, 1, 1024, fpr);
-		fclose(fpr);
+	// FILE *fpr = fopen("data.json", "r");
+	// if (fpr)
+	// {
+	// 	char buffer[1024];
+	// 	fread(buffer, 1, 1024, fpr);
+	// 	fclose(fpr);
 
-		cJSON *root = cJSON_Parse(buffer);
-		cJSON *userJson = NULL;
-		cJSON_ArrayForEach(userJson, root)
-		{
-			User user = DeserializeUser(userJson);
-			printf("Name: %s, Age: %d, Married: %s\n", user.name, user.age, user.isMarried ? "Yes" : "No");
-		}
-		cJSON_Delete(root);
-	}
+	// 	cJSON *root = cJSON_Parse(buffer);
+	// 	cJSON *userJson = NULL;
+	// 	cJSON_ArrayForEach(userJson, root)
+	// 	{
+	// 		User user = DeserializeUser(userJson);
+	// 		printf("Name: %s, Age: %d, Married: %s\n", user.name, user.age, user.isMarried ? "Yes" : "No");
+	// 	}
+	// 	cJSON_Delete(root);
+	// }
 
 	// place your own initialization codes here.
 	iInitialize(screen_height, screen_width, "Halal Tinder");
