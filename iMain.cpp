@@ -20,21 +20,21 @@ typedef struct
     int pk;            // unique field to retrieve data.
     char username[64]; // this field will be used to distinguish every user.
     char name[128];
-    char age[56];
-    char gender[7];
-    char religion[24];
+    char age[128];
+    char gender[128];
+    char religion[128];
     char location[128];
     char education[256];
     char occupation[128];
     char net_worth[256]; // in bdt.
-    char about[1000];
-    char height[100];
-    char weight[100];
-    char body_color[24];
+    char about[1024];
+    char height[128];
+    char weight[128];
+    char body_color[128];
     char fathers_occupation[128];
     char mothers_occupation[128];
-    char is_married_already[24];
-    char is_divorcee[24];
+    char is_married_already[128];
+    char is_divorcee[128];
 
 } User;
 
@@ -147,7 +147,7 @@ User DeserializeUser(cJSON *json) {
 int page_state = 0;
 
 char bg[4][100] = {"./static/halal-tinder-home1.png", "./static/halal-tinder-bg-people.png", "./static/halal-tinder-bg-search.png", "./static/halal-tinder-bg-add.png"};
-char btns[7][30] = {"./static/Home.png", "./static/People.png", "./static/Search.png", "./static/Add.png", "./static/next-btn.png", "./static/previous-btn.png", "./static/submit-btn.png"};
+char btns[8][30] = {"./static/Home.png", "./static/People.png", "./static/Search.png", "./static/Add.png", "./static/next-btn.png", "./static/previous-btn.png", "./static/submit-btn.png", "./static/visit-btn.png"};
 char texts[1][200] = {"./static/mat-t1.png"};
 char logo[2][100] = {"./static/male-logo.png", "./static/female-logo.png"};
 char form[48] = "./static/sq-form2.png";
@@ -198,6 +198,23 @@ int order = 1;
 // Logic for the btns
 bool first_item = true;
 
+// Logic for submitting
+bool submit_button_clicked = false;
+
+void clearInputFields() {
+    for(int i = 0; i < 17; i++){
+        input_box[i][0] = '\0';
+    }
+}
+
+void profileVisitedAfterSubmission() {
+    submit_button_clicked = false;
+    page_state = 1;
+    order = getFile1Size();
+    file1_size = getFile1Size();
+    clearInputFields();
+}
+
 void iDraw() {
 
     // place your drawing codes here
@@ -234,8 +251,9 @@ void iDraw() {
                     // itoa(user.age, age, 10);
                     // char net_worth[32];
                     // itoa(user.net_worth, net_worth, 10);
+                    printf("%d\n", order);
 
-                    if (strcmp(user.gender, "male") == 0) {
+                    if (strcasecmp(user.gender, "male") == 0) {
                         iShowBMP(50, 600, logo[0]);
                     } else {
                         iShowBMP(50, 600, logo[1]);
@@ -308,24 +326,29 @@ void iDraw() {
     } else if (page_state == 3) {
         // Data form here.
         iShowBMP(0, 0, bg[3]);
-        iShowBMP2(50, 80, form, 255);
-        // printf("%d\n", input_state);
+        if (submit_button_clicked) {
+            iText(400, 600, "Congratulations! Your profile was added successfully!", GLUT_BITMAP_TIMES_ROMAN_24);
+            iShowBMP(510, 450, btns[7]);
+        } else {
+            iShowBMP2(50, 80, form, 255);
+            // printf("%d\n", input_state);
 
-        // Show user given input
-        int diff_y2 = 0;
-        for (int i = 0; i < 8; i++) {
-            iText(80, 770 - diff_y2, input_box[i], GLUT_BITMAP_TIMES_ROMAN_24);
-            diff_y2 += 83;
+            // Show user given input
+            int diff_y2 = 0;
+            for (int i = 0; i < 8; i++) {
+                iText(80, 770 - diff_y2, input_box[i], GLUT_BITMAP_TIMES_ROMAN_24);
+                diff_y2 += 83;
+            }
+
+            diff_y2 = 0;
+            for (int i = 8; i < 16; i++) {
+                iText(660, 770 - diff_y2, input_box[i], GLUT_BITMAP_TIMES_ROMAN_24);
+                diff_y2 += 83;
+            }
+
+            iText(80, 105, input_box[16], GLUT_BITMAP_TIMES_ROMAN_24);
+            iShowBMP2(1210, 410, btns[6], 255);
         }
-
-        diff_y2 = 0;
-        for (int i = 8; i < 16; i++) {
-            iText(660, 770 - diff_y2, input_box[i], GLUT_BITMAP_TIMES_ROMAN_24);
-            diff_y2 += 83;
-        }
-
-        iText(80, 105, input_box[16], GLUT_BITMAP_TIMES_ROMAN_24);
-        iShowBMP2(1210, 410, btns[6], 255);
     }
 }
 
@@ -358,40 +381,31 @@ void iMouseMove(int mx, int my) {
 
 void submitForm() {
     int new_pk = file1_size + 1;
-    printf("%d", new_pk);
-    // User user1 = {new_pk, input_box[0], input_box[1], input_box[2], input_box[3], input_box[4], input_box[5], input_box[6], input_box[7],
-    // input_box[8], input_box[16], input_box[9], input_box[10], input_box[11], input_box[12], input_box[13], input_box[14], input_box[15]};
-    for (int i = 0; i < 17; i++) {
-        printf("%s\n", input_box[i]);
-    }
 
-    char hm[5] = "segs";
-    printf("%s\n", hm);
-    User user1 = {0};
-    user1 = {
-        new_pk,
-        strcpy(user1.name, *hm),
-        "bruh",
-        "bruh",
-        "bruh",
-        "bruh",
-        "bruh",
-        "bruh",
-        "bruh",
-        "bruh",
-        "bruh",
-        "bruh",
-        "bruh",
-        "bruh",
-        "bruh",
-        "bruh",
-        "bruh",
-        "bruh",
-    };
+    User new_user = {0};
+
+    new_user.pk = new_pk;
+    strcpy(new_user.name, input_box[0]);
+    strcpy(new_user.username, input_box[1]);
+    strcpy(new_user.age, input_box[2]);
+    strcpy(new_user.gender, input_box[3]);
+    strcpy(new_user.religion, input_box[4]);
+    strcpy(new_user.location, input_box[5]);
+    strcpy(new_user.education, input_box[6]);
+    strcpy(new_user.occupation, input_box[7]);
+    strcpy(new_user.net_worth, input_box[8]);
+    strcpy(new_user.height, input_box[9]);
+    strcpy(new_user.weight, input_box[10]);
+    strcpy(new_user.body_color, input_box[11]);
+    strcpy(new_user.fathers_occupation, input_box[12]);
+    strcpy(new_user.mothers_occupation, input_box[13]);
+    strcpy(new_user.is_married_already, input_box[14]);
+    strcpy(new_user.is_divorcee, input_box[15]);
+    strcpy(new_user.about, input_box[16]);
 
     // Serialize users to JSON
     cJSON *json1 = cJSON_CreateObject();
-    SerializeUser(user1, json1);
+    SerializeUser(new_user, json1);
     char *json1_str = cJSON_Print(json1);
     cJSON_Delete(json1);
 
@@ -407,6 +421,7 @@ void submitForm() {
         fputs("\n]", fp);
         fclose(fp);
     }
+    submit_button_clicked = true;
 }
 
 void iMouse(int button, int state, int mx, int my) {
@@ -473,6 +488,11 @@ void iMouse(int button, int state, int mx, int my) {
             // form submit
             if (mx > 1210 && mx < 1360 && my > 410 && my < 560) {
                 submitForm();
+            }
+            if (submit_button_clicked) {
+                if (mx > 510 && mx < 810 && my > 450 && my < 525) {
+                    profileVisitedAfterSubmission();
+                }
             }
         }
     }
