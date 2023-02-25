@@ -3,6 +3,7 @@
 
 struct PersonalData
 {
+    int pk; // unique field to retrieve data.
     char username[64]; // this field will be used to distinguish every user.
     char name[128];
     int age;
