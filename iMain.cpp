@@ -147,14 +147,14 @@ User DeserializeUser(cJSON *json) {
 int page_state = 0;
 
 char bg[4][100] = {"./static/halal-tinder-home1.png", "./static/halal-tinder-bg-people.png", "./static/halal-tinder-bg-search.png", "./static/halal-tinder-bg-add.png"};
-char btns[8][30] = {"./static/Home.png", "./static/People.png", "./static/Search.png", "./static/Add.png", "./static/next-btn.png", "./static/previous-btn.png", "./static/submit-btn.png", "./static/visit-btn.png"};
-char texts[1][200] = {"./static/mat-t1.png"};
+char btns[13][100] = {"./static/Home.png", "./static/People.png", "./static/Search.png", "./static/Add.png", "./static/next-btn.png", "./static/previous-btn.png", "./static/submit-btn.png", "./static/visit-btn.png", "./static/searchbox-btn.png", "./static/find-match-btn.png", "./static/filter-matches-btn.png", "./static/filter1-btn.png", "./static/filter2-btn.png"};
+char texts[3][200] = {"./static/mat-t1.png", "./static/or-text.png", "./static/instead-text.png"};
 char logo[2][100] = {"./static/male-logo.png", "./static/female-logo.png"};
 char form[48] = "./static/sq-form2.png";
 
 // User input setup
-char input_box[17][256];
-int index_for_input[17];
+char input_box[20][256]; // last three for searchbox.
+int index_for_input[20];
 int input_state;
 
 int btn_posX = 1700;
@@ -201,9 +201,74 @@ bool first_item = true;
 // Logic for submitting
 bool submit_button_clicked = false;
 
+// Logic for blinking bar in the input field
+int bar_on = 1;
+int barX1, barX2;
+int barY1, barY2;
+
+void drawBlinkingBar() {
+    int x_forward = 9 * strlen(input_box[input_state]) + 2;
+    if (input_state < 8) {
+        barX1 = 80 + x_forward;
+        barX2 = 80 + x_forward;
+        barY1 = 765 - 83 * input_state;
+        barY2 = 795 - 83 * input_state;
+    } else if (input_state >= 8 && input_state < 16) {
+        barX1 = 665 + x_forward;
+        barX2 = 665 + x_forward;
+        barY1 = 765 - 83 * (input_state % 8);
+        barY2 = 795 - 83 * (input_state % 8);
+    } else if (input_state == 16) {
+        barX1 = 80 + x_forward,
+        barX2 = 80 + x_forward;
+        barY1 = 100;
+        barY2 = 130;
+    } else if (input_state == 17) {
+        barX1 = 385 + x_forward;
+        barX2 = 385 + x_forward;
+        barY1 = 525;
+        barY2 = 555;
+    } else if (input_state == 18) {
+        barX1 = 375 + x_forward;
+        barX2 = 375 + x_forward;
+        barY1 = 615;
+        barY2 = 635;
+    } else if (input_state == 19) {
+        barX1 = 375 + x_forward;
+        barX2 = 375 + x_forward;
+        barY1 = 515;
+        barY2 = 535;
+    }
+
+    if (bar_on) {
+        iLine(barX1, barY1, barX2, barY2);
+    }
+}
+
+void swapBar() {
+    bar_on = !bar_on;
+}
+
+// void filterMatches() {
+    
+// }
+
+// Logic for searching.
+
+char username[64];
+bool search_box_clicked = false;
+bool find_a_match_clicked = false;
+
+int search_page_state = 0;
+// 0 for showing find a match option or filter search option.
+// 1 for after clicking find a match
+// 2 for after clicking filter search, show filter page.
+// 3 for result of form submission of state 2
+
 void clearInputFields() {
-    for(int i = 0; i < 17; i++){
+    for (int i = 0; i < 18; i++) {
         input_box[i][0] = '\0';
+        index_for_input[i] = 0;
     }
 }
 
@@ -219,6 +284,7 @@ void iDraw() {
 
     // place your drawing codes here
     iClear();
+    // printf("%s\n", input_box[input_state]);
     if (page_state == 0) {
         // intro page here
         iShowBMP(0, 0, bg[0]);
@@ -251,7 +317,6 @@ void iDraw() {
                     // itoa(user.age, age, 10);
                     // char net_worth[32];
                     // itoa(user.net_worth, net_worth, 10);
-                    printf("%d\n", order);
 
                     if (strcasecmp(user.gender, "male") == 0) {
                         iShowBMP(50, 600, logo[0]);
@@ -323,6 +388,37 @@ void iDraw() {
     } else if (page_state == 2) {
         // Search option here.
         iShowBMP(0, 0, bg[2]);
+        if (search_page_state == 0) {
+            if (!find_a_match_clicked) {
+                iShowBMP(360, 500, btns[8]);
+                iShowBMP(360, 400, btns[9]);
+                iShowBMP(410, 330, texts[1]);
+                iShowBMP(360, 230, btns[10]);
+                iShowBMP(410, 160, texts[2]);
+                // iShowBMP()
+                if (input_state == 17) {
+                    iText(385, 535, input_box[input_state], GLUT_BITMAP_9_BY_15);
+                    drawBlinkingBar();
+                }
+            } else {
+                iText(200, 500, "Under development. Please wait patiently.", GLUT_BITMAP_TIMES_ROMAN_24);
+            }
+        } else if (search_page_state == 2) {
+            iShowBMP(360, 600, btns[11]);
+            iShowBMP(360, 500, btns[12]);
+            iShowBMP(360, 400, btns[9]);
+            if (input_state == 18 || input_state == 19) {
+                drawBlinkingBar();
+            }
+
+            iText(375, 620, input_box[18], GLUT_BITMAP_9_BY_15);
+            iText(375, 520, input_box[19], GLUT_BITMAP_9_BY_15);
+        }
+        else if(search_page_state == 3) {
+            iText(500, 500, "WIP for the filtering.");
+            //filterMatches();
+        }
+
     } else if (page_state == 3) {
         // Data form here.
         iShowBMP(0, 0, bg[3]);
@@ -336,25 +432,30 @@ void iDraw() {
             // Show user given input
             int diff_y2 = 0;
             for (int i = 0; i < 8; i++) {
-                iText(80, 770 - diff_y2, input_box[i], GLUT_BITMAP_TIMES_ROMAN_24);
+                iText(80, 775 - diff_y2, input_box[i], GLUT_BITMAP_9_BY_15);
                 diff_y2 += 83;
             }
 
             diff_y2 = 0;
             for (int i = 8; i < 16; i++) {
-                iText(660, 770 - diff_y2, input_box[i], GLUT_BITMAP_TIMES_ROMAN_24);
+                iText(660, 775 - diff_y2, input_box[i], GLUT_BITMAP_9_BY_15);
                 diff_y2 += 83;
             }
 
-            iText(80, 105, input_box[16], GLUT_BITMAP_TIMES_ROMAN_24);
+            iText(80, 110, input_box[16], GLUT_BITMAP_9_BY_15);
             iShowBMP2(1210, 410, btns[6], 255);
+
+            // Blinking bar
+            if (input_state != -1) {
+                drawBlinkingBar();
+            }
         }
     }
 }
 
 void iKeyboard(unsigned char key) {
     // User input
-    if (page_state == 3) {
+    if (page_state == 3 || page_state == 2) {
         if (key != '\b') {
             input_box[input_state][index_for_input[input_state]] = key;
             index_for_input[input_state]++;
@@ -369,7 +470,7 @@ void iKeyboard(unsigned char key) {
         }
     }
 
-    if (key == 'q') {
+    if (key == 'q' && page_state == 0) {
         exit(0);
     }
 }
@@ -385,8 +486,8 @@ void submitForm() {
     User new_user = {0};
 
     new_user.pk = new_pk;
-    strcpy(new_user.name, input_box[0]);
-    strcpy(new_user.username, input_box[1]);
+    strcpy(new_user.username, input_box[0]);
+    strcpy(new_user.name, input_box[1]);
     strcpy(new_user.age, input_box[2]);
     strcpy(new_user.gender, input_box[3]);
     strcpy(new_user.religion, input_box[4]);
@@ -495,6 +596,35 @@ void iMouse(int button, int state, int mx, int my) {
                 }
             }
         }
+
+        if (page_state == 2) {
+            if (search_page_state == 0) {
+                if (mx > 370 && mx < 650 && my > 515 && my < 580) {
+                    search_box_clicked = true;
+                    input_state = 17;
+                }
+
+                if (mx > 360 && mx < 660 && my > 400 && my < 475) {
+                    // Find a match button clicked
+                    find_a_match_clicked = true;
+                }
+
+                if (mx > 360 && mx < 660 && my > 230 && my < 300) {
+                    // Filter button clicked
+                    search_page_state = 2;
+                }
+            } else if (search_page_state == 2) {
+                if (mx > 360 && mx < 660 && my > 600 && my < 675) {
+                    input_state = 18;
+                } else if (mx > 360 && mx < 660 && my > 500 && my < 575) {
+                    input_state = 19;
+                }
+
+                if (mx > 360 && mx < 660 && my > 400 && my < 475){
+                    search_page_state = 3;
+                }
+            }
+        }
     }
 }
 
@@ -512,6 +642,7 @@ int main() {
         index_for_input[i] = 0;
     }
 
+    iSetTimer(400, swapBar);
     // place your own initialization codes here.
     iInitialize(screen_height, screen_width, "Halal Tinder");
     return 0;
