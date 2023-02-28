@@ -200,6 +200,7 @@ bool first_item = true;
 
 // Logic for submitting
 bool submit_button_clicked = false;
+bool invalid_submission = false;
 
 // Logic for blinking bar in the input field
 int bar_on = 1;
@@ -249,21 +250,20 @@ void swapBar() {
     bar_on = !bar_on;
 }
 
-// void filterMatches() {
-    
-// }
-
 // Logic for searching.
 
 char username[64];
 bool search_box_clicked = false;
 bool find_a_match_clicked = false;
 
-int search_page_state = 0;
+int search_page_state = 2;
 // 0 for showing find a match option or filter search option.
 // 1 for after clicking find a match
 // 2 for after clicking filter search, show filter page.
 // 3 for result of form submission of state 2
+
+// NEW logic for searching
+bool filter_btn_clicked = false;
 
 void clearInputFields() {
     for (int i = 0; i < 18; i++) {
@@ -280,7 +280,17 @@ void profileVisitedAfterSubmission() {
     clearInputFields();
 }
 
+int last_filtered_pk;
+bool next_clicked = true;
+bool prev_clicked = false;
 void iDraw() {
+    if (order == 1) {
+        next_clicked = true;
+        prev_clicked = false;
+    } else if (order == file1_size) {
+        next_clicked = false;
+        prev_clicked = true;
+    }
 
     // place your drawing codes here
     iClear();
@@ -294,6 +304,7 @@ void iDraw() {
 
         // Next n prev btn logic
         if (order > file1_size) {
+            // printf("%d %d\n", order, file1_size);
             iText(660, 520, "No candidates available at this moment. Please visit later.", GLUT_BITMAP_TIMES_ROMAN_24);
             iShowBMP(850, 100, btns[5]);
             return;
@@ -308,79 +319,93 @@ void iDraw() {
 
             cJSON *root = cJSON_Parse(buffer);
             cJSON *userJson = NULL;
+            char gender[7];
+            cJSON_ArrayForEach(userJson, root) {
+                User user = DeserializeUser(userJson);
+                if (strcasecmp(user.username, input_box[18]) == 0) {
+                    strcpy(gender, user.gender);
+                    break;
+                }
+            }
+            printf("%s\n", gender);
             cJSON_ArrayForEach(userJson, root) {
                 User user = DeserializeUser(userJson);
                 // check if primary key matches
+                // printf("%d\n", atoi(user.age));
+                // printf("%d %d\n", user.pk, order);
+
+                // printf("%d\n", strcasecmp(user.gender, gender));
                 if (user.pk == order) {
-                    // Conversion
-                    // char age[32];
-                    // itoa(user.age, age, 10);
-                    // char net_worth[32];
-                    // itoa(user.net_worth, net_worth, 10);
+                    if (!filter_btn_clicked || ((abs(atoi(user.age) - atoi(input_box[19])) == 0) && (strcasecmp(user.username, input_box[18]) != 0) && (strcasecmp(user.gender, gender) != 0))) {
+                        last_filtered_pk = user.pk;
+                        if (strcasecmp(user.gender, "male") == 0) {
+                            iShowBMP(50, 600, logo[0]);
+                        } else {
+                            iShowBMP(50, 600, logo[1]);
+                        }
 
-                    if (strcasecmp(user.gender, "male") == 0) {
-                        iShowBMP(50, 600, logo[0]);
+                        iText(370, 820, user.name, GLUT_BITMAP_TIMES_ROMAN_24);
+                        iText(370, 770, user.age, GLUT_BITMAP_TIMES_ROMAN_24);
+                        iText(390, 770, ",", GLUT_BITMAP_TIMES_ROMAN_24);
+                        iText(410, 770, user.gender, GLUT_BITMAP_TIMES_ROMAN_24);
+                        iText(370, 720, user.about, GLUT_BITMAP_TIMES_ROMAN_24);
+
+                        // Show a gender specific image here!!
+                        iText(100, 550, "Name: ", GLUT_BITMAP_TIMES_ROMAN_24);
+                        iText(300, 550, user.name, GLUT_BITMAP_TIMES_ROMAN_24);
+
+                        iText(100, 500, "Gender: ", GLUT_BITMAP_TIMES_ROMAN_24);
+                        iText(300, 500, user.gender, GLUT_BITMAP_TIMES_ROMAN_24);
+
+                        iText(100, 450, "Religion: ", GLUT_BITMAP_TIMES_ROMAN_24);
+                        iText(300, 450, user.religion, GLUT_BITMAP_TIMES_ROMAN_24);
+
+                        iText(100, 400, "Lives at: ", GLUT_BITMAP_TIMES_ROMAN_24);
+                        iText(300, 400, user.location, GLUT_BITMAP_TIMES_ROMAN_24);
+
+                        iText(100, 350, "Formal education: ", GLUT_BITMAP_TIMES_ROMAN_24);
+                        iText(300, 350, user.education, GLUT_BITMAP_TIMES_ROMAN_24);
+
+                        iText(100, 300, "Occupation: ", GLUT_BITMAP_TIMES_ROMAN_24);
+                        iText(300, 300, user.occupation, GLUT_BITMAP_TIMES_ROMAN_24);
+
+                        iText(100, 250, "Net worth(BDT): ", GLUT_BITMAP_TIMES_ROMAN_24);
+                        iText(300, 250, user.net_worth, GLUT_BITMAP_TIMES_ROMAN_24);
+
+                        iText(600, 550, "Height: ", GLUT_BITMAP_TIMES_ROMAN_24);
+                        iText(850, 550, user.height, GLUT_BITMAP_TIMES_ROMAN_24);
+
+                        iText(600, 500, "Weight: ", GLUT_BITMAP_TIMES_ROMAN_24);
+                        iText(850, 500, user.weight, GLUT_BITMAP_TIMES_ROMAN_24);
+
+                        iText(600, 450, "Body Color: ", GLUT_BITMAP_TIMES_ROMAN_24);
+                        iText(850, 450, user.body_color, GLUT_BITMAP_TIMES_ROMAN_24);
+
+                        iText(600, 400, "Father's Occupation: ", GLUT_BITMAP_TIMES_ROMAN_24);
+                        iText(850, 400, user.fathers_occupation, GLUT_BITMAP_TIMES_ROMAN_24);
+
+                        iText(600, 350, "Mother's Occupation: ", GLUT_BITMAP_TIMES_ROMAN_24);
+                        iText(850, 350, user.mothers_occupation, GLUT_BITMAP_TIMES_ROMAN_24);
+
+                        iText(600, 300, "Is Married Already? ", GLUT_BITMAP_TIMES_ROMAN_24);
+                        iText(850, 300, user.is_married_already, GLUT_BITMAP_TIMES_ROMAN_24);
+
+                        iText(600, 250, "Is divorcee? ", GLUT_BITMAP_TIMES_ROMAN_24);
+                        iText(850, 250, user.is_divorcee, GLUT_BITMAP_TIMES_ROMAN_24);
+
+                        if (first_item) {
+                            iShowBMP(850, 100, btns[4]);
+                        } else {
+                            iShowBMP(750, 100, btns[5]);
+                            iShowBMP(1000, 100, btns[4]);
+                        }
+                        break; // exit loop since we found the user
                     } else {
-                        iShowBMP(50, 600, logo[1]);
+                        if (next_clicked)
+                            order++;
+                        else if (prev_clicked)
+                            order--;
                     }
-
-                    iText(370, 820, user.name, GLUT_BITMAP_TIMES_ROMAN_24);
-                    iText(370, 770, user.age, GLUT_BITMAP_TIMES_ROMAN_24);
-                    iText(390, 770, ",", GLUT_BITMAP_TIMES_ROMAN_24);
-                    iText(410, 770, user.gender, GLUT_BITMAP_TIMES_ROMAN_24);
-                    iText(370, 720, user.about, GLUT_BITMAP_TIMES_ROMAN_24);
-
-                    // Show a gender specific image here!!
-                    iText(100, 550, "Name: ", GLUT_BITMAP_TIMES_ROMAN_24);
-                    iText(300, 550, user.name, GLUT_BITMAP_TIMES_ROMAN_24);
-
-                    iText(100, 500, "Gender: ", GLUT_BITMAP_TIMES_ROMAN_24);
-                    iText(300, 500, user.gender, GLUT_BITMAP_TIMES_ROMAN_24);
-
-                    iText(100, 450, "Religion: ", GLUT_BITMAP_TIMES_ROMAN_24);
-                    iText(300, 450, user.religion, GLUT_BITMAP_TIMES_ROMAN_24);
-
-                    iText(100, 400, "Lives at: ", GLUT_BITMAP_TIMES_ROMAN_24);
-                    iText(300, 400, user.location, GLUT_BITMAP_TIMES_ROMAN_24);
-
-                    iText(100, 350, "Formal education: ", GLUT_BITMAP_TIMES_ROMAN_24);
-                    iText(300, 350, user.education, GLUT_BITMAP_TIMES_ROMAN_24);
-
-                    iText(100, 300, "Occupation: ", GLUT_BITMAP_TIMES_ROMAN_24);
-                    iText(300, 300, user.occupation, GLUT_BITMAP_TIMES_ROMAN_24);
-
-                    iText(100, 250, "Net worth(BDT): ", GLUT_BITMAP_TIMES_ROMAN_24);
-                    iText(300, 250, user.net_worth, GLUT_BITMAP_TIMES_ROMAN_24);
-
-                    iText(600, 550, "Height: ", GLUT_BITMAP_TIMES_ROMAN_24);
-                    iText(850, 550, user.height, GLUT_BITMAP_TIMES_ROMAN_24);
-
-                    iText(600, 500, "Weight: ", GLUT_BITMAP_TIMES_ROMAN_24);
-                    iText(850, 500, user.weight, GLUT_BITMAP_TIMES_ROMAN_24);
-
-                    iText(600, 450, "Body Color: ", GLUT_BITMAP_TIMES_ROMAN_24);
-                    iText(850, 450, user.body_color, GLUT_BITMAP_TIMES_ROMAN_24);
-
-                    iText(600, 400, "Father's Occupation: ", GLUT_BITMAP_TIMES_ROMAN_24);
-                    iText(850, 400, user.fathers_occupation, GLUT_BITMAP_TIMES_ROMAN_24);
-
-                    iText(600, 350, "Mother's Occupation: ", GLUT_BITMAP_TIMES_ROMAN_24);
-                    iText(850, 350, user.mothers_occupation, GLUT_BITMAP_TIMES_ROMAN_24);
-
-                    iText(600, 300, "Is Married Already? ", GLUT_BITMAP_TIMES_ROMAN_24);
-                    iText(850, 300, user.is_married_already, GLUT_BITMAP_TIMES_ROMAN_24);
-
-                    iText(600, 250, "Is divorcee? ", GLUT_BITMAP_TIMES_ROMAN_24);
-                    iText(850, 250, user.is_divorcee, GLUT_BITMAP_TIMES_ROMAN_24);
-
-                    if (first_item) {
-                        iShowBMP(850, 100, btns[4]);
-                    } else {
-                        iShowBMP(750, 100, btns[5]);
-                        iShowBMP(1000, 100, btns[4]);
-                    }
-
-                    break; // exit loop since we found the user
                 }
             }
             cJSON_Delete(root);
@@ -413,10 +438,12 @@ void iDraw() {
 
             iText(375, 620, input_box[18], GLUT_BITMAP_9_BY_15);
             iText(375, 520, input_box[19], GLUT_BITMAP_9_BY_15);
-        }
-        else if(search_page_state == 3) {
-            iText(500, 500, "WIP for the filtering.");
-            //filterMatches();
+        } else if (search_page_state == 3) {
+            if (strlen(input_box[18]) == 0 || strlen(input_box[19]) == 0) {
+                iText(500, 500, "Invalid Input. Please Try Again.", GLUT_BITMAP_TIMES_ROMAN_24);
+            } else {
+                page_state = 1;
+            }
         }
 
     } else if (page_state == 3) {
@@ -425,6 +452,8 @@ void iDraw() {
         if (submit_button_clicked) {
             iText(400, 600, "Congratulations! Your profile was added successfully!", GLUT_BITMAP_TIMES_ROMAN_24);
             iShowBMP(510, 450, btns[7]);
+        } else if (invalid_submission) {
+            iText(500, 500, "Wrong Submission. Please Try Again.", GLUT_BITMAP_TIMES_ROMAN_24);
         } else {
             iShowBMP2(50, 80, form, 255);
             // printf("%d\n", input_state);
@@ -480,10 +509,17 @@ void iMouseMove(int mx, int my) {
     // place your codes here
 }
 
-void submitForm() {
+int submitForm() {
     int new_pk = file1_size + 1;
 
     User new_user = {0};
+
+    for (int i = 0; i < 17; i++) {
+        if (strlen(input_box[i]) == 0) {
+            // Invalid!!
+            return -1;
+        }
+    }
 
     new_user.pk = new_pk;
     strcpy(new_user.username, input_box[0]);
@@ -522,31 +558,47 @@ void submitForm() {
         fputs("\n]", fp);
         fclose(fp);
     }
-    submit_button_clicked = true;
+    return 0;
 }
 
 void iMouse(int button, int state, int mx, int my) {
     if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
         if (mx > 1660 && mx < 1810 && my > 870 && my < 1010) {
             page_state = 0;
+            invalid_submission = false;
         } else if (mx > 1660 && mx < 1810 && my > 630 && my < 770) {
             page_state = 1;
+            filter_btn_clicked = false;
+            order = 1;
+            search_page_state = 2;
+            invalid_submission = false;
         } else if (mx > 1660 && mx < 1810 && my > 390 && my < 530) {
             page_state = 2;
+            search_page_state = 2;
+            filter_btn_clicked = false;
+            order = 1;
+            invalid_submission = false;
         } else if (mx > 1660 && mx < 1810 && my > 155 && my < 250) {
             page_state = 3;
+            invalid_submission = false;
         }
 
         if (page_state == 1 && order <= file1_size) {
             if (first_item && mx >= 850 && mx <= 1050 && my >= 100 && my <= 175) {
                 first_item = false;
+                prev_clicked = false;
+                next_clicked = true;
                 order++;
             }
 
             if (!first_item && mx >= 750 && mx <= 950 && my >= 100 && my <= 175) {
                 order--;
+                prev_clicked = true;
+                next_clicked = false;
             } else if (!first_item && mx >= 1000 && mx <= 1200 && my >= 100 && my <= 175) {
                 order++;
+                prev_clicked = false;
+                next_clicked = true;
             }
 
             if (order == 1) {
@@ -555,7 +607,15 @@ void iMouse(int button, int state, int mx, int my) {
         }
         if (page_state == 1 && order > file1_size) {
             if (mx >= 850 && mx <= 1050 && my >= 100 && my <= 175) {
+                // if(!filter_btn_clicked) {
+                //     order--;
+                // }
+                // else{
+                //     order = last_filtered_pk;
+                // }
                 order--;
+                prev_clicked = true;
+                next_clicked = false;
             }
         }
 
@@ -588,7 +648,12 @@ void iMouse(int button, int state, int mx, int my) {
 
             // form submit
             if (mx > 1210 && mx < 1360 && my > 410 && my < 560) {
-                submitForm();
+                int val = submitForm();
+                if (val == 0) {
+                    submit_button_clicked = true;
+                } else if (val == -1) {
+                    invalid_submission = true;
+                }
             }
             if (submit_button_clicked) {
                 if (mx > 510 && mx < 810 && my > 450 && my < 525) {
@@ -620,8 +685,9 @@ void iMouse(int button, int state, int mx, int my) {
                     input_state = 19;
                 }
 
-                if (mx > 360 && mx < 660 && my > 400 && my < 475){
+                if (mx > 360 && mx < 660 && my > 400 && my < 475) {
                     search_page_state = 3;
+                    filter_btn_clicked = true;
                 }
             }
         }
